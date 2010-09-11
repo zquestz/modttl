@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# this is the main configuration file for modttl
+
+# set your network interface 
+# ethernet - "INTERFACE=en0"
+# airport - "INTERFACE=en1"
+# pppoe - "INTERFACE=ppp0"
+INTERFACE=en0
+
+# Rule number to use for IPFW
+RULENUM=00071
+
+# usage: modttl -r rule [-t TTL] [-h] [-d port]
+# -r rule         IPFW rule number to remove when quit (required)
+# -t TTL          TTL of packet
+# -d port         Divert port (optional)
+# -h              This help screen
+
+# this will launch modttl 
+# by default this sets the TTL to 255 (the max setting)
+/usr/local/sbin/modttl -r $RULENUM -t 255
+
+# all rules below are for ipfw, there is many ways you can set this up.
+# we have simplified this for new users by removing ip specific ipfw rules.
+# this fixes isses for dynamic ip users, but if you want rules bound to 
+# a single ip you can use either of the examples below.
+#
+# the line below finds your ip automatically
+# IP=$(/sbin/ifconfig $INTERFACE inet | /usr/bin/sed -n 's/^.*inet\ \(\([0-9]\{1,3\}\.\)\{3\}[0-9]\{1,3\}\).*/\1/p' | tail -n 1) 
+#
+# you can also specify the ip address by doing
+# IP=192.168.1.7
+IP=me
+
+# this rule will modify the ttl for all packets on your netwrk
+# /sbin/ipfw add divert 17780 tcp from $IP to any out xmit $INTERFACE
+
+# only modify ttl of itunes packets
+# this rule can also be modified to do any other service based on port
+/sbin/ipfw add $RULENUM divert 17780 tcp from $IP 3689 to any out xmit $INTERFACE
